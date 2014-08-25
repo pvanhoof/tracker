@@ -43,6 +43,7 @@ rules_files = \
 	11-msoffice-xml.rule \
 	15-gstreamer-guess.rule \
 	15-playlist.rule \
+	15-source-code.rule \
 	90-gstreamer-image-generic.rule \
 	90-gstreamer-audio-generic.rule \
 	90-gstreamer-video-generic.rule \
@@ -168,7 +169,7 @@ endif
 
 if HAVE_TEXT
 extractmodules_LTLIBRARIES += libextract-text.la
-rules_DATA += 90-text-generic.rule
+rules_DATA += 15-source-code.rule 90-text-generic.rule
 endif
 
 if HAVE_ICON
@@ -521,6 +522,8 @@ tracker_extract_SOURCES = \
 	tracker-extract-controller.h \
 	tracker-extract-decorator.c \
 	tracker-extract-decorator.h \
+	tracker-extract-persistence.c \
+	tracker-extract-persistence.h \
 	tracker-extract-priority-dbus.c \
 	tracker-extract-priority-dbus.h \
 	tracker-read.c \
@@ -551,7 +554,8 @@ tracker-extract-priority-dbus.h: tracker-extract-priority-dbus-stamp
 	@:
 
 tracker-extract-priority-dbus-stamp: Makefile.am $(top_srcdir)/data/dbus/tracker-extract-priority.xml
-	gdbus-codegen --interface-prefix org.freedesktop.Tracker1.Extract. \
+	$(AM_V_GEN) $(GDBUS_CODEGEN) \
+	              --interface-prefix org.freedesktop.Tracker1.Extract. \
 	              --generate-c-code tracker-extract-priority-dbus \
 	              --c-namespace TrackerExtractDBus \
 	              $(top_srcdir)/data/dbus/tracker-extract-priority.xml

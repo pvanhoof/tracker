@@ -29,8 +29,12 @@ extern static const string UIDIR;
 extern static const string SRCDIR;
 
 public class Tracker.Preferences {
+	private GLib.Settings settings_fts = null;
 	private GLib.Settings settings_miner_fs = null;
 	private GLib.Settings settings_extract = null;
+
+	private bool suggest_reindex = false;
+	private bool suggest_restart = false;
 
 	private const string UI_FILE = "tracker-preferences.ui";
 	private const string HOME_STRING = "$HOME";
@@ -67,7 +71,9 @@ public class Tracker.Preferences {
 	private ToggleButton togglebutton_pictures;
 	private ToggleButton togglebutton_videos;
 	private ToggleButton togglebutton_download;
-	private HBox hbox_duplicate_warning;
+	private CheckButton checkbutton_index_file_content;
+	private CheckButton checkbutton_index_numbers;
+	private Box hbox_duplicate_warning;
 	private Button button_reindex;
 	private Notebook notebook;
 
@@ -76,10 +82,20 @@ public class Tracker.Preferences {
 
 		HOME_STRING_EVALUATED = dir_from_config (HOME_STRING);
 
+		settings_fts = new GLib.Settings ("org.freedesktop.Tracker.FTS");
+		/* settings_fts.delay(); */
+
 		settings_miner_fs = new GLib.Settings ("org.freedesktop.Tracker.Miner.Files");
+		/* settings_miner_fs.delay(); */
+
 		settings_extract = new GLib.Settings ("org.freedesktop.Tracker.Extract");
+		/* settings_extract.delay(); */
 
 		// Change notification for any key in the schema
+		settings_fts.changed.connect ((key) => {
+		      print ("tracker-fts: Key '%s' changed\n", key);
+		});
+
 		settings_miner_fs.changed.connect ((key) => {
 		      print ("tracker-miner-fs: Key '%s' changed\n", key);
 		});
@@ -135,7 +151,9 @@ public class Tracker.Preferences {
 		togglebutton_pictures = builder.get_object ("togglebutton_pictures") as ToggleButton;
 		togglebutton_videos = builder.get_object ("togglebutton_videos") as ToggleButton;
 		togglebutton_download = builder.get_object ("togglebutton_download") as ToggleButton;
-		hbox_duplicate_warning = builder.get_object ("hbox_duplicate_warning") as HBox;
+		checkbutton_index_file_content = builder.get_object ("checkbutton_index_file_content") as CheckButton;
+		checkbutton_index_numbers = builder.get_object ("checkbutton_index_numbers") as CheckButton;
+		hbox_duplicate_warning = builder.get_object ("hbox_duplicate_warning") as Box;
 
 		button_reindex = builder.get_object ("button_reindex") as Button;
 
@@ -211,6 +229,9 @@ public class Tracker.Preferences {
 		togglebutton_videos.active = model_contains (liststore_index, "&VIDEOS");
 		togglebutton_download.active = model_contains (liststore_index, "&DOWNLOAD");
 
+		checkbutton_index_file_content.active = settings_fts.get_int ("max-words-to-index") > 0;
+		checkbutton_index_numbers.active = settings_fts.get_boolean ("ignore-numbers") != true;
+
 		// Connect signals
 		// builder.connect_signals (null);
 		builder.connect_signals_full (connect_signals);
@@ -220,6 +241,50 @@ public class Tracker.Preferences {
 		setup_ui ();
 
 		window.show ();
+	}
+
+	void reindex () {
+		stdout.printf ("Reindexing...\n");
+
+		string output, errors;
+		int status;
+
+		try {
+			Process.spawn_sync (null, /* working dir */
+			                    {"tracker-control", "--hard-reset", "--start" },
+			                    null, /* env */
+			                    SpawnFlags.SEARCH_PATH,
+			                    null,
+			                    out output,
+			                    out errors,
+			                    out status);
+		} catch (GLib.Error e) {
+			stderr.printf ("Could not reindex: %s", e.message);
+		}
+		stdout.printf ("%s\n", output);
+		stdout.printf ("Finishing...\n");
+	}
+
+	void restart () {
+		stdout.printf ("Restarting...\n");
+
+		string output, errors;
+		int status;
+
+		try {
+			Process.spawn_sync (null, /* working dir */
+			                    {"tracker-control", "--terminate=miners", "--terminate=store", "--start" },
+			                    null, /* env */
+			                    SpawnFlags.SEARCH_PATH,
+			                    null,
+			                    out output,
+			                    out errors,
+			                    out status);
+		} catch (GLib.Error e) {
+			stderr.printf ("Could not restart: %s", e.message);
+		}
+		stdout.printf ("%s\n", output);
+		stdout.printf ("Finishing...\n");
 	}
 
 	// This function is used to fix up the parameter ordering for callbacks
@@ -276,12 +341,62 @@ public class Tracker.Preferences {
 			settings_extract.set_enum ("sched-idle", sched_idle);
 
 			debug ("Saving settings...");
+			settings_fts.apply ();
+			debug ("  tracker-fts: Done");
 			settings_miner_fs.apply ();
 			debug ("  tracker-miner-fs: Done");
 			settings_extract.apply ();
 			debug ("  tracker-extract: Done");
 
-			// TODO: restart the Application and Files miner (no idea how to cleanly do this atm)
+			if (suggest_reindex) {
+				Dialog dialog = new MessageDialog (window,
+				                                   DialogFlags.DESTROY_WITH_PARENT,
+				                                   MessageType.QUESTION,
+				                                   ButtonsType.NONE,
+				                                   "%s\n\n%s\n\n%s",
+				                                   _("The changes you have made to your preferences here require a reindex to ensure all your data is correctly indexed as you have requested."),
+				                                   _("This will close this dialog!"),
+				                                   _("Would you like to reindex now?"),
+				                                   null);
+				dialog.add_buttons (_("Reindex"), ResponseType.YES,
+				                    _("Do nothing"), ResponseType.NO,
+				                    null);
+
+				dialog.set_default_response(ResponseType.NO);
+
+				if (dialog.run () == ResponseType.YES) {
+					reindex ();
+				} else {
+					/* Reset this suggestion */
+					suggest_reindex = false;
+				}
+
+				dialog.destroy ();
+			} else if (suggest_restart) {
+				Dialog dialog = new MessageDialog (window,
+				                                   DialogFlags.DESTROY_WITH_PARENT,
+				                                   MessageType.QUESTION,
+				                                   ButtonsType.NONE,
+				                                   "%s\n\n%s",
+				                                   _("The changes you have made to your preferences require restarting tracker processes."),
+				                                   _("Would you like to restart now?"),
+				                                   null);
+				dialog.add_buttons (_("Restart Tracker"), ResponseType.YES,
+				                    _("Do nothing"), ResponseType.NO,
+				                    null);
+
+				dialog.set_default_response(ResponseType.NO);
+
+				if (dialog.run () == ResponseType.YES) {
+					restart ();
+				} else {
+					/* Reset this suggestion */
+					suggest_restart = false;
+				}
+
+				dialog.destroy ();
+			}
+
 			return;
 
 		default:
@@ -299,17 +414,20 @@ public class Tracker.Preferences {
 	[CCode (instance_pos = -1)]
 	public void checkbutton_enable_monitoring_toggled_cb (CheckButton source) {
 		settings_miner_fs.set_boolean ("enable-monitors", source.active);
+		suggest_restart = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void checkbutton_enable_index_on_battery_toggled_cb (CheckButton source) {
 		settings_miner_fs.set_boolean ("index-on-battery", source.active);
 		checkbutton_enable_index_on_battery_first_time.set_sensitive (!source.active);
+		suggest_restart = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void checkbutton_enable_index_on_battery_first_time_toggled_cb (CheckButton source) {
 		settings_miner_fs.set_boolean ("index-on-battery-first-time", source.active);
+		suggest_restart = true;
 	}
 
 	[CCode (instance_pos = -1)]
@@ -361,36 +479,43 @@ public class Tracker.Preferences {
 	[CCode (instance_pos = -1)]
 	public void button_ignored_directories_globs_add_clicked_cb (Button source) {
 		store_add_value_dialog (liststore_ignored_directories);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_directories_add_clicked_cb (Button source) {
 		store_add_dir (liststore_ignored_directories);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_directories_remove_clicked_cb (Button source) {
 		store_del_dir (treeview_ignored_directories);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_directories_with_content_add_clicked_cb (Button source) {
 		store_add_value_dialog (liststore_ignored_directories_with_content);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_directories_with_content_remove_clicked_cb (Button source) {
 		store_del_dir (treeview_ignored_directories_with_content);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_files_add_clicked_cb (Button source) {
 		store_add_value_dialog (liststore_ignored_files);
+		suggest_reindex = true;
 	}
 
 	[CCode (instance_pos = -1)]
 	public void button_ignored_files_remove_clicked_cb (Button source) {
 		store_del_dir (treeview_ignored_files);
+		suggest_reindex = true;
 	}
 
 	private void togglebutton_directory_update_model (ToggleButton source, ListStore store, string to_check) {
@@ -459,26 +584,26 @@ public class Tracker.Preferences {
 	}
 
 	[CCode (instance_pos = -1)]
-	public void button_reindex_clicked_cb (Button source) {
-		stdout.printf ("Reindexing...\n");
-
-		string output, errors;
-		int status;
-
-		try {
-			Process.spawn_sync (null, /* working dir */
-			                    {"tracker-control", "--hard-reset", "--start" },
-			                    null, /* env */
-			                    SpawnFlags.SEARCH_PATH,
-			                    null,
-			                    out output,
-			                    out errors,
-			                    out status);
-		} catch (GLib.Error e) {
-			stderr.printf ("Could not reindex: %s", e.message);
+	public void checkbutton_index_file_content_toggled_cb (CheckButton source) {
+		// FIXME: Should make number configurable, 10000 is the default.
+		if (source.active) {
+			settings_fts.reset ("max-words-to-index");
+		} else {
+			settings_fts.set_int ("max-words-to-index", 0);
 		}
-		stdout.printf ("%s\n", output);
-		stdout.printf ("Finishing...\n");
+
+		suggest_reindex = true;
+	}
+
+	[CCode (instance_pos = -1)]
+	public void checkbutton_index_numbers_toggled_cb (CheckButton source) {
+		settings_fts.set_boolean ("ignore-numbers", !source.active);
+		suggest_reindex = true;
+	}
+
+	[CCode (instance_pos = -1)]
+	public void button_reindex_clicked_cb (Button source) {
+		reindex ();
 	}
 
 	private void toggles_update (UserDirectory[] matches, bool active) {
@@ -515,8 +640,8 @@ public class Tracker.Preferences {
 		dialog = new Dialog.with_buttons (_("Enter value"),
 		                                  window,
 		                                  DialogFlags.DESTROY_WITH_PARENT,
-		                                  Stock.CANCEL, ResponseType.CANCEL,
-		                                  Stock.OK, ResponseType.ACCEPT);
+		                                  _("_Cancel"), ResponseType.CANCEL,
+		                                  _("_OK"), ResponseType.ACCEPT);
 
 		dialog.set_default_response(ResponseType.ACCEPT);
 		content_area = (Container) dialog.get_content_area ();
@@ -544,9 +669,9 @@ public class Tracker.Preferences {
 		FileChooserDialog dialog = new FileChooserDialog (_("Select directory"),
 		                                                  window,
 		                                                  FileChooserAction.SELECT_FOLDER,
-		                                                  Stock.CANCEL,
+		                                                  _("_Cancel"),
 		                                                  ResponseType.CANCEL,
-		                                                  Stock.OK,
+		                                                  _("_OK"),
 		                                                  ResponseType.ACCEPT);
 
 		while (true) {
@@ -826,10 +951,9 @@ public class Tracker.Preferences {
 
 			column = new TreeViewColumn.with_attributes (_("Recurse"),
 			                                             cell,
-			                                             "active", 1,
+			                                             "active", true,
 			                                             null);
 			column.set_expand (false);
-			column.set_fixed_width (50);
 			view.append_column (column);
 
 			cell.toggled.connect ((toggle, path) => {

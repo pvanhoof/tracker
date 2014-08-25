@@ -23,18 +23,9 @@
 
 #include <libxml/HTMLparser.h>
 
-#include <libtracker-common/tracker-utils.h>
-#include <libtracker-common/tracker-ontologies.h>
-#include <libtracker-common/tracker-locale.h>
+#include <libtracker-common/tracker-common.h>
 
-#include "tracker-miner-userguides.h"
-
-/* FIXME: Should we rename this to just -locale not -applications-locale ? */
-#include "tracker-miner-locale.h"
-
-#ifdef HAVE_MEEGOTOUCH
-#include "tracker-miner-meego.h"
-#endif /* HAVE_MEEGOTOUCH */
+#include "tracker-miner-user-guides.h"
 
 // FIXME: get this value from tracker conf
 #define MAX_EXTRACT_SIZE 1024 * 1024 // 1 MiB
@@ -131,7 +122,7 @@ miner_userguides_basedir_add_path (TrackerMinerFS *fs,
 		return TRUE;
 	}
 
-	g_message ("  No userguide found for locale:'%s' in this prefix", locale);
+	g_message ("  No user guide found for locale:'%s' in this prefix", locale);
 
 	return FALSE;
 }
@@ -146,7 +137,7 @@ miner_userguides_basedir_add (TrackerMinerFS *fs,
 	/* Do preliminary check on basedir */
 	path = g_build_filename (basedir, "userguide", "contents", NULL);
 	if (!g_file_test (path, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
-		g_message ("  No userguides in prefix:'%s'", path);
+		g_message ("  No user guides in prefix:'%s'", path);
 		g_free (path);
 		return;
 	}
@@ -157,7 +148,7 @@ miner_userguides_basedir_add (TrackerMinerFS *fs,
 #ifdef HAVE_MEEGOTOUCH
 	gchar *locale;
 
-	locale = tracker_miner_meego_get_locale ();
+	locale = tracker_meego_get_locale ();
 
 	/* Order of which we try here:
 	 * 1, make sure locale is set, otherwise default to 'en'
@@ -188,14 +179,14 @@ miner_userguides_basedir_add (TrackerMinerFS *fs,
 
 	/* Step 4 */
 	if (!added) {
-		g_message ("  Locale has no userguide currently, defaulting to 'en'");
+		g_message ("  Locale has no user guide currently, defaulting to 'en'");
 		path = g_build_filename (basedir, "userguide", "contents", "en", NULL);
 		added = miner_userguides_basedir_add_path (fs, path, "en");
 		g_free (path);
 	}
 
 	if (!added) {
-		g_message ("  Default locale 'en' has no userguide in this prefix");
+		g_message ("  Default locale 'en' has no user guide in this prefix");
 	}
 
 	g_free (locale);
@@ -203,7 +194,7 @@ miner_userguides_basedir_add (TrackerMinerFS *fs,
 
 	if (!added) {
 		/* Add $dir/userguide/contents */
-		g_message ("  MeeGoTouch is disabled, indexing all userguides...");
+		g_message ("  MeeGoTouch is disabled, indexing all user guides...");
 		path = g_build_filename (basedir, "userguide", "contents", NULL);
 		miner_userguides_basedir_add_path (fs, path, "");
 		g_free (path);
@@ -216,7 +207,7 @@ miner_userguides_add_directories (TrackerMinerFS *fs)
 	const gchar * const *xdg_dirs;
 	gint i;
 
-	g_message ("Setting up userguides to iterate from XDG system directories");
+	g_message ("Setting up user guides to iterate from XDG system directories");
 
 	/* Add all XDG system and local dirs */
 	xdg_dirs = g_get_system_data_dirs ();
@@ -291,7 +282,7 @@ miner_userguides_initable_init (GInitable     *initable,
 	miner_userguides_add_directories (fs);
 
 #ifdef HAVE_MEEGOTOUCH
-	tracker_miner_applications_meego_init ();
+	tracker_meego_init ();
 #endif /* HAVE_MEEGOTOUCH */
 
 	app->locale_notification_id = tracker_locale_notify_add (TRACKER_LOCALE_LANGUAGE,
@@ -312,7 +303,7 @@ miner_userguides_finalize (GObject *object)
 	tracker_locale_notify_remove (app->locale_notification_id);
 
 #ifdef HAVE_MEEGOTOUCH
-	tracker_miner_applications_meego_shutdown ();
+	tracker_meego_shutdown ();
 #endif /* HAVE_MEEGOTOUCH */
 
 	G_OBJECT_CLASS (tracker_miner_userguides_parent_class)->finalize (object);

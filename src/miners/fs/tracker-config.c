@@ -786,7 +786,7 @@ TrackerConfig *
 tracker_config_new (void)
 {
 	return g_object_new (TRACKER_TYPE_CONFIG,
-	                     "schema", "org.freedesktop.Tracker.Miner.Files",
+	                     "schema-id", "org.freedesktop.Tracker.Miner.Files",
 	                     "path", "/org/freedesktop/tracker/miner/files/",
 	                     NULL);
 }
@@ -1038,12 +1038,6 @@ rebuild_filtered_lists (TrackerConfig *config)
 				g_message ("Path '%s' being removed from recursive directories "
 				           "list, as it also exists in single directories list",
 				           (gchar *) l->data);
-#ifdef HAVE_MAEMO
-			} else if (g_str_has_prefix (l->data, "/usr/share/userguide/contents")) {
-				g_message ("Path '%s' being removed from recursive directories "
-				           "list, as it is handled by the userguide miner",
-				           (gchar *) l->data);
-#endif /* HAVE_MAEMO */
 			} else {
 				checked_dirs = g_slist_prepend (checked_dirs, l->data);
 			}

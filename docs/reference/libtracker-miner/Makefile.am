@@ -13,7 +13,7 @@ SCAN_OPTIONS=--deprecated-guards="TRACKER_DISABLE_DEPRECATED"
 # SCANGOBJ_OPTIONS=--type-init-func="gtk_type_init(0)"
 
 # The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR=../../../src/libtracker-miner
+DOC_SOURCE_DIR=$(top_srcdir)/src/libtracker-miner
 
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/src/libtracker-miner/*.h
@@ -26,7 +26,6 @@ IGNORE_HFILES=                                         \
 	tracker-file-notifier.h                        \
 	tracker-file-system.h                          \
 	tracker-miner-client.h                         \
-	tracker-miner-dbus.h                           \
 	tracker-miner-glue.h                           \
 	tracker-miner-files-index-client.h             \
 	tracker-miner-fs-processing-pool.h             \

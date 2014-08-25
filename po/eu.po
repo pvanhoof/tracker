@@ -5,9 +5,9 @@
 # Iñaki Larrañaga Murgoitio <dooteo@zundan.com>, 2014.
 msgid ""
 msgstr ""
-"Project-Id-Version: tracker tracker-1.0\n"
+"Project-Id-Version: tracker master\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-03-30 11:49+0200\n"
+"POT-Creation-Date: 2014-03-29 12:29+0100\n"
 "PO-Revision-Date: 2014-03-29 12:25+0100\n"
 "Last-Translator: Iñaki Larrañaga Murgoitio <dooteo@zundan.com>\n"
 "Language-Team: Basque <librezale@librezale.org>\n"
@@ -708,7 +708,7 @@ msgstr "Iturri bat gehitzeak --add-feed eta --title eskatzen du"
 #: ../src/tracker-utils/tracker-search.c:1662
 #: ../src/tracker-utils/tracker-sparql.c:1120
 #: ../src/tracker-utils/tracker-stats.c:86
-#: ../src/tracker-utils/tracker-tag.c:915
+#: ../src/tracker-utils/tracker-tag.c:1035
 msgid "Could not establish a connection to Tracker"
 msgstr "Ezin izan da Tracker-ekin konektatu"
 
@@ -726,7 +726,7 @@ msgstr "Ezin izan da Tracker-ekin konektatu"
 #: ../src/tracker-utils/tracker-search.c:1663
 #: ../src/tracker-utils/tracker-sparql.c:1121
 #: ../src/tracker-utils/tracker-stats.c:87
-#: ../src/tracker-utils/tracker-tag.c:916
+#: ../src/tracker-utils/tracker-tag.c:1036
 msgid "No error given"
 msgstr "Ez da errorerik eman"
 
@@ -1539,7 +1539,7 @@ msgid "Could not update tags"
 msgstr "Ezin izan dira etiketak eguneratu"
 
 #: ../src/tracker-needle/tracker-tags-view.vala:526
-#: ../src/tracker-utils/tracker-tag.c:773
+#: ../src/tracker-utils/tracker-tag.c:891
 msgid "Could not remove tag"
 msgstr "Ezin izan da etiketa kendu"
 
@@ -1548,7 +1548,7 @@ msgid "Could not retrieve tags for the current selection"
 msgstr "Ezin izan dira uneko hautapenaren etiketak eskuratu"
 
 #: ../src/tracker-needle/tracker-tags-view.vala:740
-#: ../src/tracker-utils/tracker-tag.c:597
+#: ../src/tracker-utils/tracker-tag.c:715
 msgid "Could not add tag"
 msgstr "Ezin izan da etiketa gehitu"
 
@@ -1899,6 +1899,7 @@ msgstr ""
 
 #: ../src/tracker-preferences/tracker-preferences.ui.h:47
 #: ../src/tracker-utils/tracker-search.c:523
+#: ../src/tracker-utils/tracker-tag.c:445
 msgid "Files"
 msgstr "Fitxategiak"
 
@@ -2087,7 +2088,6 @@ msgid "Offset the results"
 msgstr "Desplazatu emaitzak"
 
 #: ../src/tracker-utils/tracker-search.c:88
-#: ../src/tracker-utils/tracker-tag.c:63
 msgid "Use OR for search terms instead of AND (the default)"
 msgstr "Erabili OR (edo) bilaketako terminoetan AND (lehenetsia) ordez"
 
@@ -2430,7 +2430,14 @@ msgstr "Ez da izen-espazioaren aurrizkirik aurkitu"
 #. To translators: This is to say there are no
 #. * tags found with a particular unique ID.
 #. To translators: This is to say there are no
-#. * files found associated with this tag, e.g.:
+#. * files found associated with multiple tags, e.g.:
+#. *
+#. *   Files:
+#. *     None
+#. *
+#.
+#. To translators: This is to say there are no
+#. * resources found associated with this tag, e.g.:
 #. *
 #. *   Tags (shown by name):
 #. *     None
@@ -2446,9 +2453,10 @@ msgstr "Ez da izen-espazioaren aurrizkirik aurkitu"
 #: ../src/tracker-utils/tracker-sparql.c:500
 #: ../src/tracker-utils/tracker-sparql.c:548
 #: ../src/tracker-utils/tracker-stats.c:120
-#: ../src/tracker-utils/tracker-tag.c:328
-#: ../src/tracker-utils/tracker-tag.c:464
-#: ../src/tracker-utils/tracker-tag.c:843
+#: ../src/tracker-utils/tracker-tag.c:329
+#: ../src/tracker-utils/tracker-tag.c:461
+#: ../src/tracker-utils/tracker-tag.c:583
+#: ../src/tracker-utils/tracker-tag.c:961
 msgid "None"
 msgstr "Bat ere ez"
 
@@ -2612,6 +2620,10 @@ msgstr "Ez dago estatistikarik eskuragarri"
 msgid "Statistics:"
 msgstr "Estatistikak:"
 
+#: ../src/tracker-utils/tracker-tag.c:63
+msgid "Use AND for search terms instead of OR (the default)"
+msgstr "Erabili AND (eta) terminoak bilatzeko OR-en (lehenetsia) ordez"
+
 #: ../src/tracker-utils/tracker-tag.c:67
 msgid ""
 "List all tags (using FILTER if specified; FILTER always uses logical OR)"
@@ -2661,92 +2673,121 @@ msgstr "FITXATEGIA…"
 msgid "FILE [FILE…]"
 msgstr "FITXATEGIA [FITXATEGIA…]"
 
-#: ../src/tracker-utils/tracker-tag.c:254
+#: ../src/tracker-utils/tracker-tag.c:255
 msgid "Could not get file URNs"
 msgstr "Ezin izan da fitxategiaren URNrik eskuratu"
 
-#: ../src/tracker-utils/tracker-tag.c:319
+#: ../src/tracker-utils/tracker-tag.c:320
 msgid "Could not get files related to tag"
 msgstr "Ezin izan dira etiketarekin zerikusia duten fitxategirik eskuratu"
 
-#: ../src/tracker-utils/tracker-tag.c:401
-#: ../src/tracker-utils/tracker-tag.c:817
+#: ../src/tracker-utils/tracker-tag.c:387
+msgid "Could not get all tags in the database"
+msgstr "Ezin izan dira datu-baseko etiketa guztiak eskuratu"
+
+#: ../src/tracker-utils/tracker-tag.c:397
+msgid "No files have been tagged"
+msgstr "Ez da fitxategirik etiketatu"
+
+#: ../src/tracker-utils/tracker-tag.c:432
+msgid "Could not get files for matching tags"
+msgstr "Ezin izan da etiketekin bat datozen fitxategirik eskuratu"
+
+#: ../src/tracker-utils/tracker-tag.c:441
+msgid "No files were found matching ALL of those tags"
+msgstr "Ez da etiketa guzti horiekin bat datozen fitxategirik aurkitu"
+
+#: ../src/tracker-utils/tracker-tag.c:520
+#: ../src/tracker-utils/tracker-tag.c:935
 msgid "Could not get all tags"
 msgstr "Ezin izan dira etiketa guztiak eskuratu"
 
-#: ../src/tracker-utils/tracker-tag.c:410
-#: ../src/tracker-utils/tracker-tag.c:826
+#: ../src/tracker-utils/tracker-tag.c:529
+#: ../src/tracker-utils/tracker-tag.c:944
 msgid "No tags were found"
 msgstr "Ez da etiketarik aurkitu"
 
-#: ../src/tracker-utils/tracker-tag.c:414
+#: ../src/tracker-utils/tracker-tag.c:533
 msgid "Tags (shown by name)"
 msgstr "Etiketak (izenaren arabera erakutsita)"
 
-#: ../src/tracker-utils/tracker-tag.c:488
+#: ../src/tracker-utils/tracker-tag.c:607
 msgid "No files were modified"
 msgstr "Ez da fitxategirik aldatu"
 
-#: ../src/tracker-utils/tracker-tag.c:613
+#: ../src/tracker-utils/tracker-tag.c:657
+#: ../src/tracker-utils/tracker-tag.c:665
+msgid "Files do not exist or aren't indexed"
+msgstr "Fitxategiak ez dira existitzen, edo ez daude indexatuta"
+
+#: ../src/tracker-utils/tracker-tag.c:731
 msgid "Tag was added successfully"
 msgstr "Etiketa ongi gehitu da"
 
-#: ../src/tracker-utils/tracker-tag.c:642
+#: ../src/tracker-utils/tracker-tag.c:760
 msgid "Could not add tag to files"
 msgstr "Ezin izan da etiketa fitxategiei gehitu"
 
-#: ../src/tracker-utils/tracker-tag.c:652
+#: ../src/tracker-utils/tracker-tag.c:770
 msgid "Tagged"
 msgstr "Etiketatuta"
 
-#: ../src/tracker-utils/tracker-tag.c:653
+#: ../src/tracker-utils/tracker-tag.c:771
 msgid "Not tagged, file is not indexed"
 msgstr "Ez da etiketatu, fitxategia ez dago indexatuta"
 
-#: ../src/tracker-utils/tracker-tag.c:699
+#: ../src/tracker-utils/tracker-tag.c:817
 msgid "Could not get tag by label"
 msgstr "Ezin izan da etiketarik eskuratu"
 
-#: ../src/tracker-utils/tracker-tag.c:710
+#: ../src/tracker-utils/tracker-tag.c:828
 msgid "No tags were found by that name"
 msgstr "Ez da etiketarik aurkitu izen horren arabera"
 
-#: ../src/tracker-utils/tracker-tag.c:727
+#: ../src/tracker-utils/tracker-tag.c:845
 msgid "None of the files had this tag set"
 msgstr "Ez dago etiketa hau duen fitxategirik"
 
-#: ../src/tracker-utils/tracker-tag.c:780
+#: ../src/tracker-utils/tracker-tag.c:898
 msgid "Tag was removed successfully"
 msgstr "Etiketa ongi kendu da"
 
-#: ../src/tracker-utils/tracker-tag.c:784
+#: ../src/tracker-utils/tracker-tag.c:902
 msgid "Untagged"
 msgstr "Etiketa kenduta"
 
-#: ../src/tracker-utils/tracker-tag.c:785
+#: ../src/tracker-utils/tracker-tag.c:903
 msgid "File not indexed or already untagged"
 msgstr "Fitxategia indexatu gabe, edo jadanik etiketa gabe"
 
 #. Translators: this messagge will apper immediately after the
 #. * usage string - Usage: COMMAND [OPTION]... <THIS_MESSAGE>
 #.
-#: ../src/tracker-utils/tracker-tag.c:871
+#: ../src/tracker-utils/tracker-tag.c:989
 msgid "Add, remove or list tags"
 msgstr "Gehitu, kendu edo zerrendatu etiketak"
 
-#: ../src/tracker-utils/tracker-tag.c:887
+#: ../src/tracker-utils/tracker-tag.c:1005
 msgid "The --list option is required for --show-files"
 msgstr "--list aukera behar da --show-files aukerarekin"
 
-#: ../src/tracker-utils/tracker-tag.c:889
+#: ../src/tracker-utils/tracker-tag.c:1007
+msgid ""
+"The --and-operator option can only be used with --list and tag label "
+"arguments"
+msgstr ""
+"--and-operator aukera soilik --list aukerarekin eta etiketaren "
+"argumentuarekin erabil daiteke"
+
+#: ../src/tracker-utils/tracker-tag.c:1009
 msgid "Add and delete actions can not be used together"
 msgstr "Gehitu eta ezabatu ekintzak ezin dira batera erabili"
 
-#: ../src/tracker-utils/tracker-tag.c:891
+#: ../src/tracker-utils/tracker-tag.c:1011
 msgid "No arguments were provided"
 msgstr "Ez da argumenturik eman"
 
-#: ../src/tracker-utils/tracker-tag.c:893
+#: ../src/tracker-utils/tracker-tag.c:1013
 msgid "The --description option can only be used with --add"
 msgstr "--description aukera soilik --add aukerarekin erabil daiteke"
 
@@ -2776,28 +2817,3 @@ msgstr "Huts egin du datuen kudeatzailea hasieratzean"
 #: ../utils/tracker-sql/tracker-sql.c:200
 msgid "Empty result set"
 msgstr "Emaitzaren multzoa hutsik"
-
-#~ msgid "Use AND for search terms instead of OR (the default)"
-#~ msgstr "Erabili AND (eta) terminoak bilatzeko OR-en (lehenetsia) ordez"
-
-#~ msgid "Could not get all tags in the database"
-#~ msgstr "Ezin izan dira datu-baseko etiketa guztiak eskuratu"
-
-#~ msgid "No files have been tagged"
-#~ msgstr "Ez da fitxategirik etiketatu"
-
-#~ msgid "Could not get files for matching tags"
-#~ msgstr "Ezin izan da etiketekin bat datozen fitxategirik eskuratu"
-
-#~ msgid "No files were found matching ALL of those tags"
-#~ msgstr "Ez da etiketa guzti horiekin bat datozen fitxategirik aurkitu"
-
-#~ msgid "Files do not exist or aren't indexed"
-#~ msgstr "Fitxategiak ez dira existitzen, edo ez daude indexatuta"
-
-#~ msgid ""
-#~ "The --and-operator option can only be used with --list and tag label "
-#~ "arguments"
-#~ msgstr ""
-#~ "--and-operator aukera soilik --list aukerarekin eta etiketaren "
-#~ "argumentuarekin erabil daiteke"
