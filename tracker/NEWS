@@ -1,42 +1,170 @@
+NEW in 1.1.4 - 2014-09-05
+=========================
 
-NEW in 1.0.1 - 2014-05-08
+  * New Feature: Extractor now supports eBook and Comic book formats
+  * Fixes: GB#735645, EPub extractor bug fixes
+  * Fixes: GB#735636, tracker-sandbox: Setup xdg-user-dirs
+  * Fixes: GB#735460, ePub/eBooks indexing bugs
+  * Fixes: GB#735610, Remove requirement on ModulePath for extractor .rule files
+  * Fixes: GB#735567, build: include COPYING*GPL files in tarball
+  * Fixes: GB#735317, Tracker no longer honours my 'ignore files' put on the disks
+  * Fixes: GB#735339, undefined symbol: tracker_enumerator_get_type
+  * Fixes: GB#733573, playlists are given RDF type nmm:MusicPiece and nfo:Audio
+  * Fixes: GB#733317, tracker-extract: remove application/vnd.ms-* catchall from msoffice
+  * ontology: Added new RDF type nfo:EBook for electronic books, this is not in Nepomuk yet
+  * libtracker-fts: Fixed a memory leak for property_names variable
+  * libtracker-data: Fixed compiler warning with tracker_db_interface_sqlite_fts_update_text()
+  * libtracker-bus: Fixed a bug where tracker-stats showed no information with Vala 0.24+
+  * libtracker-bus: Fixed all TRACKER_DBUS* to Tracker.DBUS
+  * libtracker-sparql: All TrackerSparqlConnection APIs throw GLib.Error due to GUnixFDList _append() API
+  * libtracker-sparql: Move TRACKER_ const definitions to Tracker namespace, i.e. Tracker.DBUS_*
+  * libtracker-miner: Generate Vala bindings from GIR
+  * libtracker-miner: Improve GIR annotations for some nullable cases
+  * libtracker-miner: Removed TrackerCrawlFlags and use TrackerDirectoryFlags instead
+  * libtracker-miner: Call tracker_data_provider_end_async() when dir has been crawled
+  * libtracker-miner: Fixed reference leak with TrackerTaskPool when using external data miners
+  * libtracker-extract: Fixed broken EXIF GPS coordinate extraction
+  * libtracker-control: Generate Vala bindings from GIR
+  * libtracker-control: Improve GIR annotations for some nullable cases
+  * tracker-stats: Now EXPRESSIONS can be used to filter stats shown
+  * tracker-stats: Now only common and fallback RDF types are shown by default, --all can be used to old behaviour
+  * tracker-extract: Improved error parsing and content extraction for EPub contents
+  * tracker-extract: Now EPub files are marked as new RDF type nfo:EBook
+  * tracker-miner-fs: By default, ignore directories with '.trackerignore' file inside
+  * tracker-preferences: Removed fixed column for indexed locations, column header text was cut off
+  * tracker-sandbox: Setup xdg-user-dirs too
+
+Translations:
+
+  * Updated as: Nilamdyuti Goswami
+  * Updated cs: Marek Černocký
+  * Updated el: Tom Tryfonidis
+  * Updated es: Daniel Mustieles
+  * Updated fr: Alexandre Franke, Alain Lojewski
+  * Updated gl: Fran Diéguez, Fran Dieguez
+  * Updated id: Andika Triwidada
+  * Updated pt_BR: Enrico Nicoletto
+  * Updated ru: Yuri Myasoedov
+  * Updated zh_HK: Chao-Hsiung Liao
+  * Updated zh_TW: Chao-Hsiung Liao
+
+
+NEW in 1.1.3 - 2014-08-19
+=========================
+
+  * New Feature: Extractor is now 'crash-aware' that being, we have a
+    separate data source for content that can't be extracted to avoid
+    repeated failures from tracker-extract. This also survives through
+    crashes that may occur due to attempted extractions.
+  * build: Reduce vala generated source warnings from GCC.
+  * libtracker-fts: Make private functions static
+  * libtracker-miner: Make sure we return NULL on FileDataProvider
+    begin() errors
+  * libtracker-miner: Add new API tracker_decorator_fs_prepend_file()
+    as part of 'crash-aware' feature.
+
+Translations:
+
+  * Updated el: Tom Tryfonidis
+  * Updated es: Daniel Mustieles
+  * Updated fi: Lasse Liehu, Jiri Grönroos
+  * Updated lt: Aurimas Černius
+
+
+NEW in 1.1.2 - 2014-08-12
+=========================
+
+The main changes since 1.1.1 are:
+
+  * New Feature: Data Provider: Now there are TrackerDataProvider and
+    TrackerEnumerator interfaces to allow 3rd parties to supply their own
+    data to Tracker to be indexed, for example for an online or
+    proprietary service.
+  * Fixes: GB#734464, tracker-guarantee-tests failure
+  * Fixes: GB#733857, rpath is being set on tracker libraries
+  * Fixes: GB#734089, testsuite summaries fail to report results
+  * Fixes: GB#734144, Tracker processes fail to respond to INT or TERM while initialising
+  * Fixes: GB#733316, writeback: support saving metadata for GIFs
+  * Fixes: GB#733948, src/libtracker-extract/tracker-extract-info.c: Non-void function should return a value
+  * Fixes: GB#733863, 0.5 (commit 880d09fbff1f89f4ce5ed9ee5b1d23ccc6e20da2 ) breaks tracker compilation
+  * Fixes: GB#733536, Remove --enable-guarantee metadata, always guarantee nie:title and nie:contentCreated
+  * Fixes: GB#733439, tracker should include COPYING.LGPL
+  * build: Updated doap file (added programming language and category is now "core")
+  * build: Improve firefox and thunderbird detection to avoid warnings in console
+  * build: Removed all GNU_SOURCE additions in sources, use AC_USE_SYSTEM_EXTENSIONS instead
+  * build: Fixed many unit tests that were not properly isolated
+  * build: configure now has an --enable-minimal option to ONLY build tracker-store.
+  * ontology: nfo:hasMediaStream no longer has a max cardinality of 1, this may mean a reindex is needed
+  * libtracker-miner: PkgConfig file now requires libmediaart (when dependent) privately
+  * libtracker-miner: Many documentation updates and fixes
+  * libtracker-extract: There is no longer an example in the examples/ directory as this library is now private
+  * tracker-extract-mp3: Fixed mp3 parsing for ID3v24 or ID3v23 tags
+  * tracker-extract: Fixed missing TRACKER_EXTRACTORS_DIR env var that was removed at some stage
+  * tracker-extract: Cleaned up signal handling, SIGALRM and SIGABRT no longer used
+  * tracker-extract: When built with libmediaart, requires version 0.5.0 or higher.
+  * tracker-preferences: Don't use Stock.* deprecated since Gtk+ 3.10
+  * tracker-preferences: Added suggestion to reindex OR restart depending on configuration changes applied
+  * functional-tests: Improved and updated in places
+
+Translations:
+
+  * Updated el: MarMav, Maria Mavridou
+  * Updated es: Daniel Mustieles
+  * Updated lt: Aurimas Černius
+  * Updated pt_BR: Rafael Ferreira, Enrico Nicoletto
+  * Updated zh_CN: YunQiang Su, Yunqiang Su
+
+
+NEW in 1.1.1 - 2014-07-10
+=========================
+
+The main changes since 1.1.0 are:
+
+  * build: Use major version only PkgConfig files. Previously, we had
+    $library-$major-$minor (e.g. tracker-sparql-1.2, when it should be
+    tracker-sparql-1.0) to avoid creating unnecessary work for
+    developers using Tracker. This release corrects this and it was
+    planned originally.
+
+
+NEW in 1.1.0 - 2014-07-10
 =========================
 
 The main changes since 1.0.0 are:
 
-  * build: Switch --with-enca is now --enable-enca
-  * build: Switch --enable-icu-charset-detection has been added to prefer ICU over enca for MP3 content detection
-  * Fixes: GB#729708, "Unable to insert multiple values for subject" error
-  * Fixes: GB#728252, libextract-mp3.so hangs on some mp3 files
-  * Fixes: GB#728546, crash in extractor on dbus timeout warning
-  * Fixes: GB#728370, tracker-extract-vorbis.c is missing a few #ifdef HAVE_LIBMEDIAART
-  * Fixes: GB#725717, tracker-tag is missing a command line option for AND-operations
-  * Fixes: GB#729474, miner-rss subclassing from TrackerMinerOnline
-  * libtracker-miner: Memory footprint significantly reduced:
-    * Massif reports tracker-miner-fs peaking at 24MB.
-    * Massif reported previously growing to ~180MB.
-    * Fix involves using file depth based notification internally to reduced memory build up.
-    * Querying existing data in the DB now is limited (to avoid memory use, at a small performance cost).
-    * Initial indexing performance is unaffected.
-    * Approximately 1/3 more expensive indexing updates on resources post initial index.
-    * Testing using an index of 11304 folders and 123428 files.
-  * libtracker-extract: Encoding detection with libicu handles failure better
-  * tracker-extract: giflib 4.2.x doesn't support PrintGifError, handle both situations
-  * tracker-search: Fix output when searching for emails, snippets shown in red and links in green
+  * build: Added CC_CHECK_FLAGS_APPEND m4 macros from xinelib/systemd projects to check GCC compiler flags we can use
+  * tracker-miner-apps: New process to mine data about applications, previously part of tracker-miner-fs. Can be disabled with --disable-miner-apps
+  * tracker-miner-user-guides: New process to mine data about user guides and help content, previously part of tracker-miner-fs. Can be disabled with --disable-user-guides
+  * tracker-extract: [BMP] Added an new extractor
+  * tracker-extract: [ISO] Extract language, copyright and author information about ISO images using new ontology
+  * tracker-extract: [ODT] Improved extraction of content so we don't stop on embedded tabs and line breaks
+  * tracker-control: Added a lot of strings previsouly untranslated
+  * tracker-control: Removed shorthand command line switches for less common arguments (--list-*, --pause-details)
+  * tracker-control: Added --watch command line option to watch changes to the database.
+  * tracker-info: Add --resource-is-iri or -i to avoid filename to URN lookups
+  * tracker-info: Don't show "(null)" for nie:InformationElements with no nie:url
+  * tracker-preferences: General UI clean up and modernization fixing many deprecations where old GTK+ widgets were used
+  * tracker-preferences: Added 'control' tab to allow users to enable finer control of what's indexed (e.g. numbers - which are normally disabled)
+  * tracker-preferences: Add AppData with screenshots for app stores
+  * tracker-needle: Add AppData with screenshots for app stores
 
 Translations:
 
-  * Updated ca: Pau Iranzo
+  * Updated ca: Gil Forcada, Pau Iranzo
+  * Updated cs: Marek Černocký
   * Updated de: Christian Kirbach, Benjamin Steinwender
-  * Updated el: Tom Tryfonidis
+  * Updated el: Dimitris Spingos, marablack3, Dimitris Spingos (Δημήτρης Σπίγγος)
+  * Updated es: Daniel Mustieles
   * Updated eu: Inaki Larranaga Murgoitio, Iñaki Larrañaga Murgoitio
   * Updated gl: Fran Diéguez, Fran Dieguez
-  * Updated id: Andika Triwidada, Dirgita
+  * Updated it: Milo Casagrande
   * Updated ko: Seong-ho Cho
   * Updated lt: Aurimas Černius
   * Updated pl: Piotr Drąg
-  * Updated pt_BR: Rafael Ferreira
-  * Updated ru: Yuri Myasoedov, Stas Solovey
+  * Updated ru: Yuri Myasoedov
+  * Updated sr: Мирослав Николић
+  * Updated sr@latin: Мирослав Николић, Miroslav Nikolić
+  * Updated tr: Muhammet Kara
   * Updated uk: Daniel Korostil
   * Updated zh_CN: YunQiang Su, Yunqiang Su
 

@@ -37,7 +37,8 @@ static GQuark quark_property_filesystem_mtime = 0;
 
 enum {
 	PROP_0,
-	PROP_INDEXING_TREE
+	PROP_INDEXING_TREE,
+	PROP_DATA_PROVIDER
 };
 
 enum {
@@ -74,6 +75,7 @@ typedef struct {
 
 	TrackerCrawler *crawler;
 	TrackerMonitor *monitor;
+	TrackerDataProvider *data_provider;
 
 	GTimer *timer;
 
@@ -114,6 +116,9 @@ tracker_file_notifier_set_property (GObject      *object,
 		tracker_monitor_set_indexing_tree (priv->monitor,
 		                                   priv->indexing_tree);
 		break;
+	case PROP_DATA_PROVIDER:
+		priv->data_provider = g_value_dup_object (value);
+		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 		break;
@@ -133,6 +138,9 @@ tracker_file_notifier_get_property (GObject    *object,
 	switch (prop_id) {
 	case PROP_INDEXING_TREE:
 		g_value_set_object (value, priv->indexing_tree);
+		break;
+	case PROP_DATA_PROVIDER:
+		g_value_set_object (value, priv->data_provider);
 		break;
 	default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -559,7 +567,7 @@ static gboolean
 crawl_directory_in_current_root (TrackerFileNotifier *notifier)
 {
 	TrackerFileNotifierPrivate *priv = notifier->priv;
-	gboolean recurse, retval = FALSE;
+	gint depth;
 	GFile *directory;
 
 	if (!priv->current_index_root)
@@ -571,10 +579,19 @@ crawl_directory_in_current_root (TrackerFileNotifier *notifier)
 		return FALSE;
 
 	g_cancellable_reset (priv->cancellable);
-	recurse = (priv->current_index_root->flags & TRACKER_DIRECTORY_FLAG_RECURSE) != 0;
-	retval = tracker_crawler_start (priv->crawler, directory,
-	                                (recurse) ? MAX_DEPTH : 1);
-	return retval;
+
+	if ((priv->current_index_root->flags & TRACKER_DIRECTORY_FLAG_RECURSE) == 0) {
+		/* Don't recurse */
+		depth = 1;
+	} else {
+		/* Recurse */
+		depth = MAX_DEPTH;
+	}
+
+	return tracker_crawler_start (priv->crawler,
+	                              directory,
+	                              priv->current_index_root->flags,
+	                              depth);
 }
 
 static void
@@ -598,7 +615,7 @@ finish_current_directory (TrackerFileNotifier *notifier)
 		 * root, jump to the next one.
 		 */
 		g_signal_emit (notifier, signals[DIRECTORY_FINISHED], 0,
-		               directory,
+		               priv->current_index_root->root,
 		               priv->current_index_root->directories_found,
 		               priv->current_index_root->directories_ignored,
 		               priv->current_index_root->files_found,
@@ -798,6 +815,12 @@ crawl_directories_start (TrackerFileNotifier *notifier)
 
 		if ((flags & TRACKER_DIRECTORY_FLAG_IGNORE) == 0 &&
 		    crawl_directory_in_current_root (notifier)) {
+			gchar *uri;
+
+			uri = g_file_get_uri (directory);
+			tracker_info ("Processing location: '%s'", uri);
+			g_free (uri);
+
 			g_timer_reset (priv->timer);
 			g_signal_emit (notifier, signals[DIRECTORY_STARTED], 0, directory);
 
@@ -1300,6 +1323,7 @@ indexing_tree_directory_removed (TrackerIndexingTree *indexing_tree,
 	}
 
 	/* Remove monitors if any */
+	/* FIXME: How do we handle this with 3rd party data_providers? */
 	tracker_monitor_remove_recursively (priv->monitor, directory);
 
 	/* Remove all files from cache */
@@ -1316,6 +1340,10 @@ tracker_file_notifier_finalize (GObject *object)
 
 	if (priv->indexing_tree) {
 		g_object_unref (priv->indexing_tree);
+	}
+
+	if (priv->data_provider) {
+		g_object_unref (priv->data_provider);
 	}
 
 	g_object_unref (priv->crawler);
@@ -1338,9 +1366,16 @@ static void
 tracker_file_notifier_constructed (GObject *object)
 {
 	TrackerFileNotifierPrivate *priv;
+	GFile *root;
+
+	G_OBJECT_CLASS (tracker_file_notifier_parent_class)->constructed (object);
 
 	priv = TRACKER_FILE_NOTIFIER (object)->priv;
 	g_assert (priv->indexing_tree);
+
+	/* Initialize filesystem and register properties */
+	root = tracker_indexing_tree_get_master_root (priv->indexing_tree);
+	priv->file_system = tracker_file_system_new (root);
 
 	g_signal_connect (priv->indexing_tree, "directory-added",
 	                  G_CALLBACK (indexing_tree_directory_added), object);
@@ -1348,6 +1383,28 @@ tracker_file_notifier_constructed (GObject *object)
 	                  G_CALLBACK (indexing_tree_directory_added), object);
 	g_signal_connect (priv->indexing_tree, "directory-removed",
 	                  G_CALLBACK (indexing_tree_directory_removed), object);
+
+	/* Set up crawler */
+	priv->crawler = tracker_crawler_new (priv->data_provider);
+	tracker_crawler_set_file_attributes (priv->crawler,
+	                                     G_FILE_ATTRIBUTE_TIME_MODIFIED ","
+	                                     G_FILE_ATTRIBUTE_STANDARD_TYPE);
+
+	g_signal_connect (priv->crawler, "check-file",
+	                  G_CALLBACK (crawler_check_file_cb),
+	                  object);
+	g_signal_connect (priv->crawler, "check-directory",
+	                  G_CALLBACK (crawler_check_directory_cb),
+	                  object);
+	g_signal_connect (priv->crawler, "check-directory-contents",
+	                  G_CALLBACK (crawler_check_directory_contents_cb),
+	                  object);
+	g_signal_connect (priv->crawler, "directory-crawled",
+	                  G_CALLBACK (crawler_directory_crawled_cb),
+	                  object);
+	g_signal_connect (priv->crawler, "finished",
+	                  G_CALLBACK (crawler_finished_cb),
+	                  object);
 }
 
 static void
@@ -1439,6 +1496,15 @@ tracker_file_notifier_class_init (TrackerFileNotifierClass *klass)
 	                                                      TRACKER_TYPE_INDEXING_TREE,
 	                                                      G_PARAM_READWRITE |
 	                                                      G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (object_class,
+	                                 PROP_DATA_PROVIDER,
+	                                 g_param_spec_object ("data-provider",
+	                                                      "Data provider",
+	                                                      "Data provider to use to crawl structures populating data, e.g. like GFileEnumerator",
+	                                                      TRACKER_TYPE_DATA_PROVIDER,
+	                                                      G_PARAM_READWRITE |
+	                                                      G_PARAM_CONSTRUCT_ONLY));
+
 	g_type_class_add_private (object_class,
 	                          sizeof (TrackerFileNotifierClass));
 
@@ -1477,33 +1543,8 @@ tracker_file_notifier_init (TrackerFileNotifier *notifier)
 		g_assert_not_reached ();
 	}
 
-	/* Initialize filesystem and register properties */
-	priv->file_system = tracker_file_system_new ();
-
 	priv->timer = g_timer_new ();
 	priv->stopped = TRUE;
-
-	/* Set up crawler */
-	priv->crawler = tracker_crawler_new ();
-	tracker_crawler_set_file_attributes (priv->crawler,
-	                                     G_FILE_ATTRIBUTE_TIME_MODIFIED ","
-	                                     G_FILE_ATTRIBUTE_STANDARD_TYPE);
-
-	g_signal_connect (priv->crawler, "check-file",
-	                  G_CALLBACK (crawler_check_file_cb),
-	                  notifier);
-	g_signal_connect (priv->crawler, "check-directory",
-	                  G_CALLBACK (crawler_check_directory_cb),
-	                  notifier);
-	g_signal_connect (priv->crawler, "check-directory-contents",
-	                  G_CALLBACK (crawler_check_directory_contents_cb),
-	                  notifier);
-	g_signal_connect (priv->crawler, "directory-crawled",
-	                  G_CALLBACK (crawler_directory_crawled_cb),
-	                  notifier);
-	g_signal_connect (priv->crawler, "finished",
-	                  G_CALLBACK (crawler_finished_cb),
-	                  notifier);
 
 	/* Set up monitor */
 	priv->monitor = tracker_monitor_new ();
@@ -1526,12 +1567,14 @@ tracker_file_notifier_init (TrackerFileNotifier *notifier)
 }
 
 TrackerFileNotifier *
-tracker_file_notifier_new (TrackerIndexingTree *indexing_tree)
+tracker_file_notifier_new (TrackerIndexingTree  *indexing_tree,
+                           TrackerDataProvider  *data_provider)
 {
 	g_return_val_if_fail (TRACKER_IS_INDEXING_TREE (indexing_tree), NULL);
 
 	return g_object_new (TRACKER_TYPE_FILE_NOTIFIER,
 	                     "indexing-tree", indexing_tree,
+	                     "data-provider", data_provider,
 	                     NULL);
 }
 
@@ -1549,6 +1592,8 @@ tracker_file_notifier_start (TrackerFileNotifier *notifier)
 
 		if (priv->pending_index_roots) {
 			crawl_directories_start (notifier);
+		} else {
+			g_signal_emit (notifier, signals[FINISHED], 0);
 		}
 	}
 
@@ -1566,6 +1611,7 @@ tracker_file_notifier_stop (TrackerFileNotifier *notifier)
 
 	if (!priv->stopped) {
 		tracker_crawler_stop (priv->crawler);
+
 		g_cancellable_cancel (priv->cancellable);
 		priv->stopped = TRUE;
 	}

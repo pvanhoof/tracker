@@ -12,7 +12,7 @@
 
 nfo: a tracker:Namespace, tracker:Ontology ;
 	tracker:prefix "nfo" ;
-	nao:lastModified "2014-01-03T02:14:35Z" .
+	nao:lastModified "2014-08-28T14:15:00Z" .
 
 nfo:Document a rdfs:Class ;
 	rdfs:label "Document" ;
@@ -500,6 +500,7 @@ nfo:fileName a rdf:Property ;
 	nrl:maxCardinality 1 ;
 	rdfs:domain nfo:FileDataObject ;
 	rdfs:range xsd:string ;
+	tracker:indexed true ;
 	tracker:fulltextIndexed true ;
 	tracker:weight 7 .
 
@@ -535,7 +536,6 @@ nfo:hasMediaStream a rdf:Property ;
 	rdfs:label "hasMediaStream" ;
 	rdfs:comment "Connects a media container with a single media stream contained within." ;
 	rdfs:subPropertyOf nie:hasPart ;
-	nrl:maxCardinality 1 ;
 	rdfs:domain nfo:Media ;
 	rdfs:range nie:DataObject .
 
@@ -757,6 +757,20 @@ nfo:deletionDate a rdf:Property ;
 	rdfs:domain nfo:DeletedResource ;
 	rdfs:range xsd:dateTime .
 
+nfo:depiction a rdf:Property ;
+	a nrl:InverseFunctionalProperty ;
+	rdfs:label "depiction" ;
+	rdfs:comment "Relates an information element to an image which depicts said element." ;
+	rdfs:domain rdfs:Resource ;
+	rdfs:range nfo:Image .
+
+nfo:depicts a rdf:Property ;
+	a nrl:InverseFunctionalProperty ;
+	rdfs:label "depicts" ;
+	rdfs:comment "Relates an image to the information elements it depicts." ;
+	rdfs:domain nfo:Image ;
+	rdfs:range rdfs:Resource .
+
 nfo:bookmarks a rdf:Property ;
 	rdfs:label "link" ;
 	rdfs:comment "The address of the linked object. Usually a web URL." ;
@@ -914,11 +928,6 @@ poi: a tracker:Namespace ;
 poi:ObjectOfInterest a rdfs:Class ;
 	rdfs:subClassOf rdfs:Resource .
 
-nfo:depicts a rdf:Property ;
-	rdfs:domain nfo:Image ;
-	rdfs:range poi:ObjectOfInterest .
-
-
 # Ivan's magic proposal for happy media lists
 nfo:mediaListEntry a rdf:Property ;
 	rdfs:label "Media list entry" ;
@@ -983,6 +992,11 @@ nfo:HelpDocument a rdfs:Class ;
 	rdfs:comment "User guides and similar to assist the user" ;
 	rdfs:subClassOf nfo:Document .
 
+# This class needs to be submitted to NEPOMUK
+nfo:EBook a rdfs:Class ;
+	rdfs:label "Electronic book" ;
+	rdfs:comment "Books which can be electronically viewed" ;
+	rdfs:subClassOf nfo:PaginatedTextDocument .
 
 # This property needs to be submitted to NEPOMUK
 nfo:lastPlayedPosition a rdf:Property ;

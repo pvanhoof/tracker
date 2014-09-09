@@ -71,8 +71,7 @@ static gboolean miner_disable_option_arg_func (const gchar  *option_value,
                                                const gchar  *value,
                                                gpointer      data,
                                                GError      **error);
-static void     miner_handle_next             (void);
-
+static void miner_handle_next (void);
 
 static GMainLoop *main_loop;
 static GSList *miners;
@@ -83,8 +82,6 @@ static gint verbosity = -1;
 static gint initial_sleep = -1;
 static gboolean no_daemon;
 static gchar *eligible;
-static GArray *disable_options = NULL;
-/* static DisableOption disable_option[] = { 0 }; */
 static gboolean version;
 static guint miners_timeout_id = 0;
 
@@ -395,11 +392,6 @@ miner_handle_next (void)
 			g_main_loop_quit (main_loop);
 		}
 
-		return;
-	}
-
-	/* Check disabled miners */
-	if (miner_disabled_check ()) {
 		return;
 	}
 
@@ -833,7 +825,6 @@ main (gint argc, gchar *argv[])
 	 */
 	context = g_option_context_new (_("- start the tracker indexer"));
 
-	disable_options = g_array_new (FALSE, FALSE, sizeof (gint));
 	g_option_context_add_main_entries (context, entries, NULL);
 	g_option_context_parse (context, &argc, &argv, &error);
 	g_option_context_free (context);
@@ -841,23 +832,18 @@ main (gint argc, gchar *argv[])
 	if (error) {
 		g_printerr ("%s\n", error->message);
 		g_error_free (error);
-		g_array_free (disable_options, TRUE);
 		return EXIT_FAILURE;
 	}
 
 	if (version) {
 		g_print ("\n" ABOUT "\n" LICENSE "\n");
-		g_array_free (disable_options, TRUE);
 		return EXIT_SUCCESS;
 	}
 
 	if (eligible) {
 		check_eligible ();
-		g_array_free (disable_options, TRUE);
 		return EXIT_SUCCESS;
 	}
-
-	initialize_signal_handler ();
 
 	/* Initialize logging */
 	config = tracker_config_new ();
@@ -897,7 +883,6 @@ main (gint argc, gchar *argv[])
 		            error ? error->message : "unknown error");
 		g_object_unref (config);
 		tracker_log_shutdown ();
-		g_array_free (disable_options, TRUE);
 		return EXIT_FAILURE;
 	}
 
@@ -922,7 +907,6 @@ main (gint argc, gchar *argv[])
 		tracker_writeback_shutdown ();
 		g_object_unref (config);
 		tracker_log_shutdown ();
-		g_array_free (disable_options, TRUE);
 		return EXIT_FAILURE;
 	}
 
@@ -967,6 +951,8 @@ main (gint argc, gchar *argv[])
 
 	miner_handle_first (config, do_mtime_checking);
 
+	initialize_signal_handler ();
+
 	/* Go, go, go! */
 	g_main_loop_run (main_loop);
 
@@ -988,8 +974,6 @@ main (gint argc, gchar *argv[])
 
 	tracker_writeback_shutdown ();
 	tracker_log_shutdown ();
-
-	g_array_free (disable_options, TRUE);
 
 	g_print ("\nOK\n\n");
 

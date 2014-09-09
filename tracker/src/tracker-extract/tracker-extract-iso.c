@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, Red Hat, Inc
+ * Copyright (C) 2011, 2014 Red Hat, Inc
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,8 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  * Boston, MA  02110-1301, USA.
  *
- * Author: Christophe Fergeau <cfergeau@redhat.com>
+ * Authors: Christophe Fergeau <cfergeau@redhat.com>
+ *          Zeeshan Ali (Khattak) <zeeshanak@gnome.org>
  */
 
 #include "config.h"
@@ -52,6 +53,7 @@ tracker_extract_get_metadata (TrackerExtractInfo *info_)
 	gboolean bootable;
 	const gchar *id;
 	const gchar *name;
+        GList *languages, *l;
 	TrackerSparqlBuilder *metadata;
 
 	metadata = tracker_extract_info_get_metadata_builder (info_);
@@ -136,6 +138,13 @@ tracker_extract_get_metadata (TrackerExtractInfo *info_)
 		tracker_sparql_builder_predicate (metadata, "osinfo:mediaId");
 		tracker_sparql_builder_object_string (metadata, id);
 	}
+
+        languages = osinfo_media_get_languages (media);
+        for (l = languages; l != NULL; l = l->next) {
+		tracker_sparql_builder_predicate (metadata, "osinfo:language");
+		tracker_sparql_builder_object_string (metadata, (char *) l->data);
+        }
+        g_list_free (languages);
 
 	g_object_unref (G_OBJECT (media));
 	g_object_unref (G_OBJECT (loader));
