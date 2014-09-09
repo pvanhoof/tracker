@@ -230,9 +230,13 @@ cd /usr/share/tracker-tests/
 %{_libexecdir}/tracker-miner-fs
 %{_libexecdir}/tracker-store
 %{_libexecdir}/tracker-writeback
+%{_libexecdir}/tracker-miner-apps
+%{_libexecdir}/tracker-miner-user-guides
 %config %{_sysconfdir}/xdg/autostart/tracker-miner-fs.desktop
 %config %{_sysconfdir}/xdg/autostart/tracker-store.desktop
 %config %{_sysconfdir}/xdg/autostart/tracker-extract.desktop
+%config %{_sysconfdir}/xdg/autostart/tracker-miner-apps.desktop
+%config %{_sysconfdir}/xdg/autostart/tracker-miner-user-guides.desktop
 %{_libdir}/systemd/user/tracker-miner-fs.service
 %{_libdir}/systemd/user/tracker-store.service
 %{_libdir}/systemd/user/tracker-extract.service
