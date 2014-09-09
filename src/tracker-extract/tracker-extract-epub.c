@@ -551,7 +551,6 @@ extract_opf_contents (const gchar *uri,
                       GList       *content_files)
 {
 	OPFContentData content_data = { 0 };
-	GMarkupParseContext *context;
 	TrackerConfig *config;
 	GError *error = NULL;
 	GList *l;
@@ -562,7 +561,6 @@ extract_opf_contents (const gchar *uri,
 	};
 
 	config = tracker_main_get_config ();
-	context = g_markup_parse_context_new (&xml_parser, 0, &content_data, NULL);
 
 	content_data.contents = g_string_new ("");
 	content_data.limit = (gsize) tracker_config_get_max_bytes (config);
@@ -570,26 +568,29 @@ extract_opf_contents (const gchar *uri,
 	g_debug ("Extracting up to %" G_GSIZE_FORMAT " bytes of content", content_data.limit);
 
 	for (l = content_files; l; l = l->next) {
+		GMarkupParseContext *context;
 		gchar *path;
+
+		context = g_markup_parse_context_new (&xml_parser, 0, &content_data, NULL);
 
 		/* Page file is relative to OPF file location */
 		path = g_build_filename (content_prefix, l->data, NULL);
 		tracker_gsf_parse_xml_in_zip (uri, path, context, &error);
-		g_free (path);
 
 		if (error) {
-			g_warning ("Error extracting EPUB contents: %s\n",
-			           error->message);
-			break;
+			g_warning ("Error extracting EPUB contents (%s): %s",
+				   path, error->message);
+			g_clear_error (&error);
 		}
+		g_free (path);
+
+		g_markup_parse_context_free (context);
 
 		if (content_data.limit <= 0) {
 			/* Reached plain text extraction limit */
 			break;
 		}
 	}
-
-	g_markup_parse_context_free (context);
 
 	return g_string_free (content_data.contents, FALSE);
 }
@@ -615,7 +616,7 @@ extract_opf (const gchar          *uri,
 	data = opf_data_new (info);
 
 	tracker_sparql_builder_predicate (data->metadata, "a");
-	tracker_sparql_builder_object (data->metadata, "nfo:TextDocument");
+	tracker_sparql_builder_object (data->metadata, "nfo:EBook");
 
 	/* Create parsing context */
 	context = g_markup_parse_context_new (&opf_parser, 0, data, NULL);

@@ -27,10 +27,12 @@
 #include <glib-object.h>
 #include <gio/gio.h>
 
+#include "tracker-data-provider.h"
+
 G_BEGIN_DECLS
 
 #define TRACKER_TYPE_CRAWLER            (tracker_crawler_get_type ())
-#define TRACKER_CRAWLER(object)                 (G_TYPE_CHECK_INSTANCE_CAST ((object), TRACKER_TYPE_CRAWLER, TrackerCrawler))
+#define TRACKER_CRAWLER(object)         (G_TYPE_CHECK_INSTANCE_CAST ((object), TRACKER_TYPE_CRAWLER, TrackerCrawler))
 #define TRACKER_CRAWLER_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST ((klass), TRACKER_TYPE_CRAWLER, TrackerCrawlerClass))
 #define TRACKER_IS_CRAWLER(object)      (G_TYPE_CHECK_INSTANCE_TYPE ((object), TRACKER_TYPE_CRAWLER))
 #define TRACKER_IS_CRAWLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TRACKER_TYPE_CRAWLER))
@@ -70,9 +72,10 @@ struct TrackerCrawlerClass {
 };
 
 GType           tracker_crawler_get_type     (void);
-TrackerCrawler *tracker_crawler_new          (void);
+TrackerCrawler *tracker_crawler_new          (TrackerDataProvider *data_provider);
 gboolean        tracker_crawler_start        (TrackerCrawler *crawler,
                                               GFile          *file,
+                                              TrackerDirectoryFlags flags,
 					      gint            max_depth);
 void            tracker_crawler_stop         (TrackerCrawler *crawler);
 void            tracker_crawler_pause        (TrackerCrawler *crawler);

@@ -21,13 +21,15 @@ tracker_miners_DATA =
 if HAVE_TRACKER_MINER_FS
 tracker_miners_DATA +=                                 \
 	tracker-miner-extract.desktop                  \
-	tracker-miner-applications.desktop             \
 	tracker-miner-files.desktop
-
-if HAVE_MAEMO
-# Userguides are done in the miner-fs process
-tracker_miners_DATA += tracker-miner-userguides.desktop
 endif
+
+if HAVE_TRACKER_MINER_APPS
+tracker_miners_DATA += tracker-miner-applications.desktop
+endif
+
+if HAVE_TRACKER_MINER_USER_GUIDES
+tracker_miners_DATA += tracker-miner-userguides.desktop
 endif
 
 if HAVE_TRACKER_MINER_EVOLUTION
