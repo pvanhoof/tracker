@@ -84,6 +84,7 @@ static gboolean no_daemon;
 static gchar *eligible;
 static gboolean version;
 static guint miners_timeout_id = 0;
+static GArray *disable_options = NULL;
 
 static GOptionEntry entries[] = {
 	{ "verbosity", 'v', 0,
