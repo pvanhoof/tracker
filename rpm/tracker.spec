@@ -3,7 +3,7 @@ Name:       tracker
 %define enable_demo 0
 
 Summary:    An object database, tag/metadata database, search tool and indexer
-Version:    0.17.6
+Version:    1.1.4
 Release:    1
 Group:      Data Management/Content Framework
 License:    GPLv2+
@@ -13,7 +13,7 @@ Source1:    tracker-rpmlintrc
 Source2:    tracker-store.service
 Source3:    tracker-miner-fs.service
 Source4:    tracker-extract.service
-Requires:   libmediaart >= 0.3.0
+Requires:   libmediaart >= 0.5.0
 Requires:   gst-plugins-base >= 0.10
 Requires:   unzip
 Requires:   systemd
