@@ -241,11 +241,11 @@ main (int argc, char **argv)
 
 				n_terms = g_strv_length (terms);
 
-				for (i = 0;
-				     i < n_terms && !show_rdf_type;
-				     i++) {
-					show_rdf_type = g_str_match_string (terms[i], rdf_type, TRUE);
-				}
+//				for (i = 0;
+//				     i < n_terms && !show_rdf_type;
+//				     i++) {
+//					show_rdf_type = g_str_match_string (terms[i], rdf_type, TRUE);
+//				}
 
 				if (!show_rdf_type) {
 					continue;
